@@ -1,19 +1,38 @@
-import express, { Request, Response } from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
+// Import necessary libraries
+import express from "express";
+import mqtt from "mqtt";
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = 3001;
 
-app.use(cors());
-app.use(express.json());
+const mqttClient = mqtt.connect("mqtt://localhost:1883/");
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Express server is running!");
+mqttClient.on("connect", () => {
+  console.log("Connected to MQTT broker");
+
+  mqttClient.subscribe("smart-devices", (err) => {
+    if (err) {
+      console.error("Subscription error:", err);
+    } else {
+      console.log("Subscribed to topic");
+    }
+  });
+});
+
+mqttClient.on("message", (topic, message) => {
+  console.log(`Received message on topic ${topic}: ${message.toString()}`);
+});
+
+app.post("/lamp/on", (req, res) => {
+  mqttClient.publish("smart-devices/set", JSON.stringify({ state: "ON" }));
+  res.send("Lamp turned ON");
+});
+
+app.post("/lamp/off", (req, res) => {
+  mqttClient.publish("smart-devices/set", JSON.stringify({ state: "OFF" }));
+  res.send("Lamp turned OFF");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Express server is running on http://localhost:${PORT}`);
 });
