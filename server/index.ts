@@ -1,38 +1,26 @@
-// Import necessary libraries
 import express from "express";
-import mqtt from "mqtt";
+import mqttClient from "./mqttClient";
+import cors from "cors";
 
 const app = express();
-const PORT = 3001;
+const port = 3001;
 
-const mqttClient = mqtt.connect("mqtt://localhost:1883/");
+app.use(cors());
 
-mqttClient.on("connect", () => {
-  console.log("Connected to MQTT broker");
+app.use(express.json());
+// Example route to publish a message
+app.post("/publish", (req, res) => {
+  const topic = req.body.topic;
+  const message = req.body.message;
 
-  mqttClient.subscribe("smart-devices", (err) => {
+  mqttClient.publish(topic, message, (err) => {
     if (err) {
-      console.error("Subscription error:", err);
-    } else {
-      console.log("Subscribed to topic");
+      return res.status(500).send("Failed to publish message");
     }
+    res.status(200).send({ success: true });
   });
 });
 
-mqttClient.on("message", (topic, message) => {
-  console.log(`Received message on topic ${topic}: ${message.toString()}`);
-});
-
-app.post("/lamp/on", (req, res) => {
-  mqttClient.publish("smart-devices/set", JSON.stringify({ state: "ON" }));
-  res.send("Lamp turned ON");
-});
-
-app.post("/lamp/off", (req, res) => {
-  mqttClient.publish("smart-devices/set", JSON.stringify({ state: "OFF" }));
-  res.send("Lamp turned OFF");
-});
-
-app.listen(PORT, () => {
-  console.log(`Express server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });

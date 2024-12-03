@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -51,6 +52,9 @@ export default function Home() {
           </CardFooter>
         </Card>
       </div>
+      <Link href={"/publish"}>
+        <Button>Create a new topic</Button>
+      </Link>
     </div>
   );
 }
